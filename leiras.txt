@@ -1,0 +1,59 @@
+Konkurens programozás beadandó feladat: Fractal Trees
+Feltételek
+A megoldást nem ide, hanem a gyakorlat TMS-csoportjába kell feltölteni.
+Az ide (az előadáshoz) feltöltött megoldásokat teljesen figyelmen kívül hagyjuk, mintha nem is léteznének.
+Beadás formátuma: zip.
+Ez csak a megoldás forrásfájljait tartalmazza, a megfelelő könyvtárszerkezetben.
+Más fájlokat (pl. .class) ne tartalmazzon a zip.
+Ha a megoldás működtetéséhez szükségesek további (pl. bemeneti) fájlok, azok a zip gyökerében legyenek.
+⚠️ A megoldás ne tartalmazzon szükségtelen könyvtárakat, a fordítás gyökérkönyvtára a zip alapkönyvtára. Ha például a megoldás fájljai bekerülnek egy beadandó könyvtárba, amit a feladat egyáltalán nem kért, az össze fogja zavarni az automatikus tesztelőt: elutasítja a megoldást arra hivatkozva, hogy az elvárt fájlok nem találhatók meg.
+Amennyiben a 7Zip program telepítve van, a check.cmd előkészíti a feltölthető fájlt solution.zip néven.
+Feltöltés után pár perccel egy autotesztelő fut le. Ha ez hibát jelez, akkor a megoldás javítandó.
+A beadandó általános feltételei a Teams Általános csoportjában, a Fájlok/feltételek könyvtárban olvashatók.
+Csalni tilos. Aki mégis megteszi, és kiderül, elesik a tárgy teljesítésétől.
+Ide beletartozik mással közös kód beadása és a mesterséges intelligencia használata.
+A megoldás legyen a lehető legjobb minőségű.
+A feladatban megadott neveket betűre pontosan úgy kell használni, ahogy meg vannak adva.
+A Java nyelv szokásos konvenciói követendők.
+A kód szerkezete legyen világos, a változók nevei legyenek megfelelők.
+A tanult koncepciókat, eszközöket helyesen kell használni.
+Beadás határideje.
+A megoldás a határidőn belül többször is beadható.
+Aki egyáltalán nem tölt fel megoldást, elesik a tárgy teljesítésétől.
+Az utoljára beadott megoldás kerül értékelésre.
+A határidő éles.
+Nem célszerű kicentizni az időt. Aki mégis megteszi, és lekésik akár pár perccel, csak magára vethet.
+Prológus - A fraktálok jópofák!
+Az alábbi program egy fraktálfát számol ki és jelenít meg. A rajzolás egyetlen vonallal kezdődik. Ezután minden rekurziós szinten (height) a vonal vége két új, kissé módosított szögű és csökkentett hosszúságú vonalra ágazik el. Az utolsó néhány szinten a vonalak színe zöld, míg előtte fekete.
+
+A grafikus elemekhez a Swing (Java) könyvtárat fogjuk használni. A grafikus keretrendszer fő elemének létrejöttével, a Canvas osztály egy példányával, a JVM elindít egy második szálat. Ezt Event Dispatch Thread-nek, vagy röviden EDT-nek nevezik. Az EDT hasonlóan viselkedik, mint az összes többi szál, és a grafikus elemekért felelős, míg a fő szál kezel minden mást.
+
+Az alapkódban a fő szál a main metódust hajtja végre, míg az EDT a paint metódust. A Swing mélyebb megértése nem cél. Elég számunkra a setColor és drawLine metódusok használata. Ezek már amúgy is szerepelnek az alapkódban. Egyes metódusok argumentumként egy Graphics objektumot is igényelnek. Ez explicit módon szerepel ugyanabban a kontextusban, vagy elérhető a Canvas.getGraphics() metóduson keresztül (pl. tree.getGraphics() a main metódusban).
+
+Ahhoz, hogy jobban láthatóak legyenek rajzolás során az egyes lépések engedélyezheted a lassú módot. Ehhez a slowMode értékét állítsd igazra. Ezt pedig úgy tudod megtenni, ha a program elindításakor az első konzol argumentumként true értéket adsz meg. Az alapkódot használva, lassú módban egyértelműen látható, hogy minden egyes vonal egyesével, szekvenciálisan rajzolódik ki. Nincs párhuzamos végrehajtás. Továbbá a teljes fát kizárólag az EDT számolja és rajzolja meg.
+
+1. Felvonás - Logika és grafika szétválasztása
+A hatékonyabb kód felé vezető úton az első nagyobb lépésünk az lenne, hogy az összes számítást a fő szálra helyeznénk át, míg az EDT csak a grafikát kezelné. Ehhez a makeFractalTree metódust a fő szálon kellene meghívni, viszont a benne lévő összes Swing kód nélkül. Ne helyben rajzoljunk, hanem csomagoljuk a rajzoláshoz szükséges négy egész számot, valamint a vonal színét egy új objektumba, majd helyezzük ezt egy konténerbe. Ugyanabból a konténerből az EDT folyamatosan objektumokat vesz majd ki, és a koordináták és a szín alapján megrajzolja a vonalakat.
+
+A kommunikációnak szálbiztosnak kell lennie, a konténer maximális méretének észszerű értéket válasszatok. A fő szálnak és az EDT-nek képesnek kell lennie egyidejűleg dolgoznia.
+
+2. Felvonás - Párhuzamos számítás
+Bár az EDT nem grafikus munkáktól való tehermentesítése alapvetően egy jó ötlet, a fő szál teleszemetelése fraktál számításokkal nem feltétlenül az optimális megoldás. Ezen számításokhoz inkább hozzunk létre egy ExecutorService objektumot és fogjuk munkára a szálait.
+
+Kezdetben a fő szálnak kell elindítania a számításokat az ExecutorService objektumon keresztüli makeFractalTree metódus meghívásával. Miután az első makeFractalTree hívás elindult és fut, az ExecutorService objektum etesse önmagát újabb feladatokkal. Ehhez írjuk át a makeFractalTree metódus rekurzív hívásait.
+
+Elég az első rekurzív hívást az ExecutorService objektumon keresztül végezni, míg a második maradhat közvetlen hívás. Ennek eredményeként, valahányszor a fa kettéágazik, az első ágon egy új Runnable objektum kerül az ExecutorService példányba, míg a már meglévő Runnable objektum végrehajtása a második ágon folytatódik.
+
+Győződj meg róla, hogy a szálak száma legfeljebb 128, továbbá kapcsold be a lassú módot. Figyeld meg, mennyivel gyorsabban rajzolódik ki a fa az egy szálú verzióhoz képest.
+
+3. Felvonás - Irányított leállás
+Sokkal szebb lenne, ha a fő szál tisztában lenne a rajzolási folyamat állapotával, és megfelelően le tudná állítani az ExecutorService objektumot az utolsó feladat beküldése után.
+
+Használj egy szálbiztos számlálót a beküldött Runnable objektumok számának nyomon követésére. A számlálónak akkor és csak akkor kell elérnie a nullát, ha a fa teljesen meg van rajzolva. Amikor ez megtörténik, a fő szálnak le kell állítania az ExecutorService objektumot, és mindezt közölnie kell a világgal a "Main has finished" konzolra történő kiíratásával.
+
+Amíg a fő szál várakozik, ne terhelje a CPU-t. Használd a wait-notify mechanizmust, hogy alvó állapotba helyezd, és felébreszd, amikor egy Runnable objektum a végéhez ér. Győződj meg róla, hogy a fő szál képes visszatérni alvó állapotba, ha más Runnable objektumok még végrehajtás alatt állnak.
+
+Megjegyzés: ne ijedj meg, ha az EDT végtelen rajzolási ciklusban fut, ezzel megakadályozva a program leálltát. Ez most nem fontos számunkra. Nem a Swing megtanulása a cél. Csak arra ügyelj, hogy a fő szál rendezett módon érje el a leállást jelző kiíratást.
+
+Epilógus - De... De... ennek semmi értelme!
+Ha hibára gyanakszol a kódban vagy a leírásban, közvetlenül is elérhetsz Teamsen keresztül: <br> CEDCHT Menczer Andor
