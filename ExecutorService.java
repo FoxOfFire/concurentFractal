@@ -30,9 +30,8 @@ public class ExecutorService extends Thread {
 		trans.putLine(l);
 		ExecutorService service = new ExecutorService(x2, y2, angle - 20, height - 1, this.trans);
 
-		makeFractalTree(x2, y2, angle + 20, height - 1);
-
 		trans.attemptToSpawnThread(service);
+		makeFractalTree(x2, y2, angle + 20, height - 1);
 	}
 
 	@Override
